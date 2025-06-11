@@ -22,7 +22,7 @@
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             width: 95%;
-            max-width: 900px;
+            max-width: 1000px; /* افزایش عرض برای ستون‌های جدید */
             text-align: center;
         }
         h1 {
@@ -130,16 +130,24 @@
             }
         });
 
-        // ✨ تابع جدید برای استاندارد کردن فرمت تاریخ (مثال: 1403/2/5 -> 1403/02/05)
+        // تابع برای استاندارد کردن فرمت تاریخ (مثال: 1403/2/5 -> 1403/02/05)
         function normalizeDate(dateString) {
+            if (!dateString) return '';
             const parts = dateString.split('/');
             if (parts.length === 3) {
-                const year = parts[0];
-                const month = parts[1].padStart(2, '0'); // ماه را دو رقمی می‌کند
-                const day = parts[2].padStart(2, '0');   // روز را دو رقمی می‌کند
-                return `${year}/${month}/${day}`;
+                return `${parts[0].padStart(4, '0')}/${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}`;
             }
-            return dateString; // اگر فرمت متفاوت بود، خود رشته را برگردان
+            return dateString;
+        }
+
+        // ✨ تابع جدید برای استاندارد کردن فرمت ساعت (مثال: 9:30 -> 09:30)
+        function normalizeTime(timeString) {
+            if (!timeString) return '00:00';
+            const parts = timeString.split(':');
+            if (parts.length === 2) {
+                return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+            }
+            return timeString;
         }
 
         async function searchStudent() {
@@ -155,45 +163,49 @@
             try {
                 const response = await fetch(googleSheetURL);
                 if (!response.ok) throw new Error('Network response was not ok');
-                
+
                 const data = await response.text();
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
                 const foundRecords = rows.slice(1).filter(row => row.length > 1 && row[0] === studentId);
 
-                // --- ✨ اصلاح کلیدی در منطق مرتب‌سازی ✨ ---
+                // ✨ اصلاح نهایی در منطق مرتب‌سازی
                 foundRecords.sort((a, b) => {
-                    const dateA = normalizeDate(a[5]); // تاریخ رکورد اول را استاندارد کن
-                    const dateB = normalizeDate(b[5]); // تاریخ رکورد دوم را استاندارد کن
+                    const dateA = normalizeDate(a[5]);
+                    const dateB = normalizeDate(b[5]);
+                    const timeA = normalizeTime(a[6]);
+                    const timeB = normalizeTime(b[6]);
 
                     const dateCompare = dateA.localeCompare(dateB);
                     if (dateCompare !== 0) {
-                        return dateCompare;
+                        return dateCompare; // مرتب‌سازی بر اساس تاریخ
                     }
-                    // اگر تاریخ‌ها یکسان بود، ساعت‌ها را مقایسه کن (فرمت ساعت HH:MM خودش قابل مرتب‌سازی است)
-                    const timeA = a[6] || '00:00';
-                    const timeB = b[6] || '00:00';
-                    return timeA.localeCompare(timeB);
+                    return timeA.localeCompare(timeB); // اگر تاریخ یکسان بود، مرتب‌سازی بر اساس ساعت
                 });
 
                 loadingDiv.style.display = 'none';
 
                 if (foundRecords.length > 0) {
+                    // ✨ تغییر: اضافه شدن ستون‌های مکان و نوع به هدر جدول
                     let tableHTML = `
                         <table class="results-table">
                             <thead>
                                 <tr>
                                     <th>کد دانشجو</th>
                                     <th>نام</th>
-                                    <th>نام پدر</th>
+                                    <th>نام خانوادگی</th>
                                     <th>درس</th>
                                     <th>کد درس</th>
                                     <th>تاریخ</th>
                                     <th>ساعت</th>
-                                    <th>شماره صندلی</th>
+                                    <th>مکان</th>
+                                    <th>نوع امتحان</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
+                    // ✨ تغییر: اضافه شدن ستون‌های مکان و نوع به سطرهای جدول
+                    // ستون‌ها: std,name,fname,dars,code,tarikh,saat,makan,noe
+                    // اندیس‌ها:  0,  1,   2,   3,   4,    5,    6,    7,    8
                     foundRecords.forEach(record => {
                         tableHTML += `
                             <tr>
@@ -205,6 +217,7 @@
                                 <td>${record[5] || ''}</td>
                                 <td>${record[6] || ''}</td>
                                 <td>${record[7] || ''}</td>
+                                <td>${record[8] || ''}</td>
                             </tr>
                         `;
                     });
