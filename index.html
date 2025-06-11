@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>جستجوی اطلاعات دانشجو</title>
+    <title>سامانه اطلاع‌رسانی</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
         body {
@@ -18,18 +18,21 @@
         }
         .container {
             background: white;
-            padding: 30px;
+            padding: 30px 40px;
             border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             width: 95%;
-            /* تغییر: عرض بیشتر برای نمایش بهتر جدول */
             max-width: 900px; 
             text-align: center;
         }
         h1 {
             color: #1a237e;
+            margin-bottom: 10px;
         }
-        /* بخش جستجو */
+        p.subtitle {
+            color: #555;
+            margin-bottom: 25px;
+        }
         .search-box {
             display: flex;
             gap: 10px;
@@ -37,36 +40,37 @@
             align-items: center;
         }
         input[type="text"] {
-            flex-grow: 1; /* باعث می‌شود اینپوت فضای خالی را پر کند */
+            flex-grow: 1;
             padding: 12px;
             border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 16px;
+            text-align: center;
         }
         button {
-            background-color: #007bff;
+            background-image: linear-gradient(to right, #3949ab, #1a237e);
             color: white;
             padding: 12px 25px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
+            font-weight: bold;
+            transition: all 0.3s;
         }
         button:hover {
-            background-color: #0056b3;
+            box-shadow: 0 4px 15px rgba(50, 63, 153, 0.4);
+            transform: translateY(-2px);
         }
         #loading {
             display: none;
             margin-top: 20px;
             color: #555;
         }
-
-        /* استایل‌های جدید برای جدول نتایج */
         #userInfo {
             margin-top: 25px;
             text-align: right;
-            overflow-x: auto; /* برای نمایش بهتر در موبایل */
+            overflow-x: auto; /* برای نمایش بهتر جدول در موبایل */
         }
         .results-table {
             width: 100%;
@@ -77,6 +81,7 @@
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
+            white-space: nowrap; /* جلوگیری از شکستن کلمات در سلول‌ها */
         }
         .results-table thead {
             background-color: #e9ecef;
@@ -100,7 +105,7 @@
 
     <div class="container">
         <h1>سامانه اطلاع‌رسانی</h1>
-        <p>برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
+        <p class="subtitle">برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
         <div class="search-box">
             <input type="text" id="studentId" placeholder="کد دانشجویی (std)">
             <button id="searchBtn">جستجو</button>
@@ -137,17 +142,21 @@
 
             try {
                 const response = await fetch(googleSheetURL);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data = await response.text();
                 
+                // اصلاح کلیدی: پاک کردن فاصله‌های خالی از تمام سلول‌ها برای جلوگیری از خطا
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
                 
-                // تغییر: استفاده از filter به جای find برای یافتن تمام رکوردهای دانشجو
-                const foundRecords = rows.slice(1).filter(row => row[0] === studentId);
+                // فیلتر کردن رکوردها بر اساس کد دانشجویی وارد شده
+                const foundRecords = rows.slice(1).filter(row => row.length > 1 && row[0] === studentId);
 
                 loadingDiv.style.display = 'none';
 
                 if (foundRecords.length > 0) {
-                    // تغییر: ساختار HTML برای جدول ایجاد می‌شود
+                    // ایجاد ساختار HTML برای جدول نتایج
                     let tableHTML = `
                         <table class="results-table">
                             <thead>
@@ -165,26 +174,22 @@
                             <tbody>
                     `;
                     
-                    // به ازای هر رکورد پیدا شده، یک سطر به جدول اضافه می‌شود
                     foundRecords.forEach(record => {
                         tableHTML += `
                             <tr>
-                                <td>${record[0]}</td>
-                                <td>${record[1]}</td>
-                                <td>${record[2]}</td>
-                                <td>${record[3]}</td>
-                                <td>${record[4]}</td>
-                                <td>${record[5]}</td>
-                                <td>${record[6]}</td>
-                                <td>${record[7]}</td>
+                                <td>${record[0] || ''}</td>
+                                <td>${record[1] || ''}</td>
+                                <td>${record[2] || ''}</td>
+                                <td>${record[3] || ''}</td>
+                                <td>${record[4] || ''}</td>
+                                <td>${record[5] || ''}</td>
+                                <td>${record[6] || ''}</td>
+                                <td>${record[7] || ''}</td>
                             </tr>
                         `;
                     });
 
-                    tableHTML += `
-                            </tbody>
-                        </table>
-                    `;
+                    tableHTML += `</tbody></table>`;
                     userInfoDiv.innerHTML = tableHTML;
 
                 } else {
@@ -193,8 +198,8 @@
 
             } catch (error) {
                 loadingDiv.style.display = 'none';
-                userInfoDiv.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور. لطفاً مجدداً تلاش کنید.</p>';
-                console.error('Error fetching data:', error);
+                userInfoDiv.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور. لطفاً از صحت لینک و اتصال اینترنت خود مطمئن شوید.</p>';
+                console.error('Error fetching or parsing data:', error);
             }
         }
     </script>
