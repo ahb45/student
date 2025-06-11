@@ -1,105 +1,140 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>جستجوی اطلاعات دانشجو</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      direction: rtl;
-      text-align: right;
-      padding: 30px;
-      background: #eef2f3;
-    }
-
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px 0;
-    }
-
-    #result {
-      margin-top: 20px;
-    }
-
-    .card {
-      background: #ffffff;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .field {
-      margin-bottom: 8px;
-    }
-
-    .label {
-      font-weight: bold;
-      color: #444;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جستجوی اطلاعات دانشجو</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Vazirmatn", Tahoma, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f4f7f6;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #userInfo {
+            margin-top: 25px;
+            text-align: right;
+            line-height: 2;
+            color: #444;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
-  <h2>🔍 جستجوی اطلاعات دانشجو</h2>
-  <label>کد دانشجویی:</label><br>
-  <input type="text" id="stdInput" placeholder="مثلاً 123456">
-  <button onclick="search()">جستجو</button>
-  <div id="result">اطلاعات نمایش داده خواهد شد...</div>
 
-  <script>
-    async function search() {
-      const std = document.getElementById("stdInput").value.trim();
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "<em>⏳ در حال جستجو...</em>";
+    <div class="container">
+        <h1>سامانه اطلاع‌رسانی</h1>
+        <p>برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
+        <input type="text" id="studentId" placeholder="کد دانشجویی (std)">
+        <button id="searchBtn">جستجو</button>
+        <div id="loading">درحال جستجو...</div>
+        <div id="userInfo"></div>
+    </div>
 
-      const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv";
+    <script>
+        // ⚠️ مهم: این لینک را با لینکی که از گوگل شیت دریافت کردید، جایگزین کنید
+        const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv';
 
-      try {
-        const response = await fetch(csvUrl);
-        const text = await response.text();
-        const rows = text.split(/\r?\n/).map(row => row.split(","));
+        const searchBtn = document.getElementById('searchBtn');
+        const studentIdInput = document.getElementById('studentId');
+        const userInfoDiv = document.getElementById('userInfo');
+        const loadingDiv = document.getElementById('loading');
 
-        const headers = rows[0].map(h => h.trim());
-        const data = rows.slice(1).filter(row => row.length === headers.length);
+        searchBtn.addEventListener('click', searchStudent);
+        studentIdInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                searchStudent();
+            }
+        });
 
-        const labelMap = {
-          "std": "کد دانشجویی",
-          "name": "نام",
-          "fname": "نام خانوادگی",
-          "dars": "درس",
-          "code": "کد درس",
-          "tarikh": "تاریخ",
-          "saat": "ساعت",
-          "makan": "مکان"
-        };
+        async function searchStudent() {
+            const studentId = studentIdInput.value.trim();
+            if (!studentId) {
+                userInfoDiv.innerHTML = '<p style="color: red;">لطفاً کد دانشجویی را وارد کنید.</p>';
+                return;
+            }
 
-        const matches = data.filter(row => row[0].trim() === std);
+            userInfoDiv.innerHTML = '';
+            loadingDiv.style.display = 'block';
 
-        if (matches.length > 0) {
-          resultDiv.innerHTML = "";
-          matches.forEach(row => {
-            const card = document.createElement("div");
-            card.className = "card";
+            try {
+                const response = await fetch(googleSheetURL);
+                const data = await response.text();
+                
+                // داده‌ها را به آرایه‌ای از ردیف‌ها تبدیل می‌کنیم
+                const rows = data.split('\n').map(row => row.split(','));
+                
+                // اولین ردیف که شامل عنوان ستون‌ها است را نادیده می‌گیریم
+                // و به دنبال کد دانشجویی می‌گردیم
+                const studentData = rows.slice(1).find(row => row[0].trim() === studentId);
 
-            headers.forEach((header, i) => {
-              const label = labelMap[header.trim()] || header.trim();
-              const value = row[i] ? row[i].trim() : "";
-              const field = `<div class="field"><span class="label">${label}:</span> ${value}</div>`;
-              card.innerHTML += field;
-            });
+                loadingDiv.style.display = 'none';
 
-            resultDiv.appendChild(card);
-          });
-        } else {
-          resultDiv.innerHTML = "❌ اطلاعاتی برای این کد یافت نشد.";
+                if (studentData) {
+                    // ستون‌ها: std,name,fname,dars,code,tarikh,saat,makan
+                    // اندیس‌ها:  0,  1,   2,   3,   4,    5,    6,    7
+                    userInfoDiv.innerHTML = `
+                        <p><strong>نام:</strong> ${studentData[1]}</p>
+                        <p><strong>نام پدر:</strong> ${studentData[2]}</p>
+                        <p><strong>درس:</strong> ${studentData[3]}</p>
+                        <p><strong>کد درس:</strong> ${studentData[4]}</p>
+                        <p><strong>تاریخ:</strong> ${studentData[5]}</p>
+                        <p><strong>ساعت:</strong> ${studentData[6]}</p>
+                        <p><strong>مکان:</strong> ${studentData[7]}</p>
+                    `;
+                } else {
+                    userInfoDiv.innerHTML = '<p style="color: orange;">دانشجویی با این کد یافت نشد.</p>';
+                }
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                userInfoDiv.innerHTML = '<p style="color: red;">خطا در برقراری ارتباط با سرور. لطفاً مجدداً تلاش کنید.</p>';
+                console.error('Error fetching data:', error);
+            }
         }
-      } catch (e) {
-        resultDiv.innerHTML = "⚠️ خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.";
-        console.error(e);
-      }
-    }
-  </script>
+    </script>
+
 </body>
 </html>
