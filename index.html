@@ -70,7 +70,7 @@
         #userInfo {
             margin-top: 25px;
             text-align: right;
-            overflow-x: auto; /* برای نمایش بهتر جدول در موبایل */
+            overflow-x: auto;
         }
         .results-table {
             width: 100%;
@@ -81,7 +81,7 @@
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
-            white-space: nowrap; /* جلوگیری از شکستن کلمات در سلول‌ها */
+            white-space: nowrap;
         }
         .results-table thead {
             background-color: #e9ecef;
@@ -130,6 +130,18 @@
             }
         });
 
+        // ✨ تابع جدید برای استاندارد کردن فرمت تاریخ (مثال: 1403/2/5 -> 1403/02/05)
+        function normalizeDate(dateString) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const year = parts[0];
+                const month = parts[1].padStart(2, '0'); // ماه را دو رقمی می‌کند
+                const day = parts[2].padStart(2, '0');   // روز را دو رقمی می‌کند
+                return `${year}/${month}/${day}`;
+            }
+            return dateString; // اگر فرمت متفاوت بود، خود رشته را برگردان
+        }
+
         async function searchStudent() {
             const studentId = studentIdInput.value.trim();
             if (!studentId) {
@@ -142,23 +154,25 @@
 
             try {
                 const response = await fetch(googleSheetURL);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
+                
                 const data = await response.text();
-                
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
-                
                 const foundRecords = rows.slice(1).filter(row => row.length > 1 && row[0] === studentId);
 
-                // --- ✨ تغییر جدید: مرتب‌سازی نتایج ✨ ---
-                // رکوردها ابتدا بر اساس تاریخ (ستون اندیس ۵) و سپس ساعت (ستون اندیس ۶) مرتب می‌شوند.
+                // --- ✨ اصلاح کلیدی در منطق مرتب‌سازی ✨ ---
                 foundRecords.sort((a, b) => {
-                    const dateCompare = a[5].localeCompare(b[5]); // ۱. مقایسه تاریخ‌ها
+                    const dateA = normalizeDate(a[5]); // تاریخ رکورد اول را استاندارد کن
+                    const dateB = normalizeDate(b[5]); // تاریخ رکورد دوم را استاندارد کن
+
+                    const dateCompare = dateA.localeCompare(dateB);
                     if (dateCompare !== 0) {
-                        return dateCompare; // اگر تاریخ‌ها متفاوت بودند، بر اساس همان مرتب کن
+                        return dateCompare;
                     }
-                    return a[6].localeCompare(b[6]); // ۲. اگر تاریخ‌ها یکسان بود، ساعت‌ها را مقایسه کن
+                    // اگر تاریخ‌ها یکسان بود، ساعت‌ها را مقایسه کن (فرمت ساعت HH:MM خودش قابل مرتب‌سازی است)
+                    const timeA = a[6] || '00:00';
+                    const timeB = b[6] || '00:00';
+                    return timeA.localeCompare(timeB);
                 });
 
                 loadingDiv.style.display = 'none';
@@ -170,17 +184,16 @@
                                 <tr>
                                     <th>کد دانشجو</th>
                                     <th>نام</th>
-                                    <th>نام خانوادگی</th>
+                                    <th>نام پدر</th>
                                     <th>درس</th>
                                     <th>کد درس</th>
                                     <th>تاریخ</th>
                                     <th>ساعت</th>
-                                    <th>مکان</th>
+                                    <th>شماره صندلی</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
-                    
                     foundRecords.forEach(record => {
                         tableHTML += `
                             <tr>
@@ -195,14 +208,11 @@
                             </tr>
                         `;
                     });
-
                     tableHTML += `</tbody></table>`;
                     userInfoDiv.innerHTML = tableHTML;
-
                 } else {
                     userInfoDiv.innerHTML = '<p class="message warning">دانشجویی با این کد یافت نشد.</p>';
                 }
-
             } catch (error) {
                 loadingDiv.style.display = 'none';
                 userInfoDiv.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور. لطفاً از صحت لینک و اتصال اینترنت خود مطمئن شوید.</p>';
