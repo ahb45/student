@@ -5,81 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>جستجوی اطلاعات دانشجو</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Vazirmatn", Tahoma, sans-serif;
+            font-family: 'Vazirmatn', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #f4f7f6;
-            margin: 0;
+            background-color: #f0f2f5;
+            margin: 20px;
         }
         .container {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             text-align: center;
         }
         h1 {
-            color: #333;
+            color: #1a237e;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            color: #555;
+            margin-bottom: 25px;
         }
         input[type="text"] {
             width: 100%;
             padding: 12px;
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             box-sizing: border-box;
             font-size: 16px;
+            text-align: center;
         }
         button {
-            background-color: #007bff;
+            background-image: linear-gradient(to right, #3949ab, #1a237e);
             color: white;
-            padding: 12px 25px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
+            font-weight: bold;
+            transition: all 0.3s;
         }
         button:hover {
-            background-color: #0056b3;
-        }
-        #userInfo {
-            margin-top: 25px;
-            text-align: right;
-            line-height: 2;
-            color: #444;
+            box-shadow: 0 4px 15px rgba(50, 63, 153, 0.4);
+            transform: translateY(-2px);
         }
         #loading {
             display: none;
             margin-top: 20px;
             color: #555;
         }
+        #result-area {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .student-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3949ab;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .results-table tr td:first-child {
+            font-weight: bold;
+            color: #333;
+            width: 120px; /* عرض ثابت برای عناوین */
+        }
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+        hr {
+            border: none;
+            border-top: 1px dashed #ccc;
+            margin: 20px 0;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .error { background-color: #ffebee; color: #c62828; }
+        .warning { background-color: #fff3e0; color: #ef6c00; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>سامانه اطلاع‌رسانی</h1>
-        <p>برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
+        <h1>سامانه اطلاع‌رسانی رویدادها</h1>
+        <p class="subtitle">برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
         <input type="text" id="studentId" placeholder="کد دانشجویی (std)">
-        <button id="searchBtn">جستجو</button>
-        <div id="loading">درحال جستجو...</div>
-        <div id="userInfo"></div>
+        <button id="searchBtn">🔍 جستجو</button>
+        <div id="loading">درحال جستجو... لطفا صبر کنید...</div>
+        <div id="result-area"></div>
     </div>
 
     <script>
         // ⚠️ مهم: این لینک را با لینکی که از گوگل شیت دریافت کردید، جایگزین کنید
-        const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv';
+        const googleSheetURL = 'لینک-CSV-که-از-گوگل-شیت-کپی-کردید-را-اینجا-بچسبانید';
 
         const searchBtn = document.getElementById('searchBtn');
         const studentIdInput = document.getElementById('studentId');
-        const userInfoDiv = document.getElementById('userInfo');
+        const resultArea = document.getElementById('result-area');
         const loadingDiv = document.getElementById('loading');
 
         searchBtn.addEventListener('click', searchStudent);
@@ -92,45 +136,64 @@
         async function searchStudent() {
             const studentId = studentIdInput.value.trim();
             if (!studentId) {
-                userInfoDiv.innerHTML = '<p style="color: red;">لطفاً کد دانشجویی را وارد کنید.</p>';
+                resultArea.innerHTML = '<p class="message error">لطفاً کد دانشجویی را وارد کنید.</p>';
                 return;
             }
 
-            userInfoDiv.innerHTML = '';
+            resultArea.innerHTML = '';
             loadingDiv.style.display = 'block';
 
             try {
                 const response = await fetch(googleSheetURL);
                 const data = await response.text();
                 
-                // داده‌ها را به آرایه‌ای از ردیف‌ها تبدیل می‌کنیم
-                const rows = data.split('\n').map(row => row.split(','));
+                const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
                 
-                // اولین ردیف که شامل عنوان ستون‌ها است را نادیده می‌گیریم
-                // و به دنبال کد دانشجویی می‌گردیم
-                const studentData = rows.slice(1).find(row => row[0].trim() === studentId);
+                // 1. فیلتر کردن تمام رکوردهای مربوط به این دانشجو
+                const studentRecords = rows.slice(1).filter(row => row[0] === studentId);
 
                 loadingDiv.style.display = 'none';
 
-                if (studentData) {
-                    // ستون‌ها: std,name,fname,dars,code,tarikh,saat,makan
-                    // اندیس‌ها:  0,  1,   2,   3,   4,    5,    6,    7
-                    userInfoDiv.innerHTML = `
-                        <p><strong>نام:</strong> ${studentData[1]}</p>
-                        <p><strong>نام پدر:</strong> ${studentData[2]}</p>
-                        <p><strong>درس:</strong> ${studentData[3]}</p>
-                        <p><strong>کد درس:</strong> ${studentData[4]}</p>
-                        <p><strong>تاریخ:</strong> ${studentData[5]}</p>
-                        <p><strong>ساعت:</strong> ${studentData[6]}</p>
-                        <p><strong>مکان:</strong> ${studentData[7]}</p>
-                    `;
+                if (studentRecords.length > 0) {
+                    // 2. مرتب‌سازی رکوردها بر اساس تاریخ و سپس ساعت
+                    const sortedRecords = studentRecords.sort((a, b) => {
+                        // مقایسه تاریخ (ستون 5)
+                        const dateCompare = a[5].localeCompare(b[5]);
+                        if (dateCompare !== 0) {
+                            return dateCompare;
+                        }
+                        // اگر تاریخ‌ها یکسان بود، ساعت را مقایسه کن (ستون 6)
+                        return a[6].localeCompare(b[6]);
+                    });
+
+                    // نمایش نام دانشجو فقط یک بار
+                    resultArea.innerHTML = `<div class="student-header">اطلاعات برای: ${sortedRecords[0][1]} ${sortedRecords[0][2]}</div>`;
+                    
+                    // 3. نمایش هر رکورد در یک جدول جداگانه
+                    sortedRecords.forEach((record, index) => {
+                        if (index > 0) {
+                            resultArea.innerHTML += '<hr>'; // جداکننده بین رکوردها
+                        }
+                        
+                        const tableHTML = `
+                            <table class="results-table">
+                                <tr><td>درس:</td><td>${record[3]}</td></tr>
+                                <tr><td>کد درس:</td><td>${record[4]}</td></tr>
+                                <tr><td>تاریخ:</td><td>${record[5]}</td></tr>
+                                <tr><td>ساعت:</td><td>${record[6]}</td></tr>
+                                <tr><td>مکان:</td><td>${record[7]}</td></tr>
+                            </table>
+                        `;
+                        resultArea.innerHTML += tableHTML;
+                    });
+
                 } else {
-                    userInfoDiv.innerHTML = '<p style="color: orange;">دانشجویی با این کد یافت نشد.</p>';
+                    resultArea.innerHTML = '<p class="message warning">دانشجویی با این کد یافت نشد.</p>';
                 }
 
             } catch (error) {
                 loadingDiv.style.display = 'none';
-                userInfoDiv.innerHTML = '<p style="color: red;">خطا در برقراری ارتباط با سرور. لطفاً مجدداً تلاش کنید.</p>';
+                resultArea.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور. لطفاً مجدداً تلاش کنید.</p>';
                 console.error('Error fetching data:', error);
             }
         }
