@@ -22,7 +22,7 @@
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             width: 95%;
-            max-width: 1100px; /* افزایش عرض برای جا دادن ستون جدید */
+            max-width: 1100px;
             text-align: center;
         }
         h1 {
@@ -76,18 +76,28 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            table-layout: fixed; /* برای کنترل بهتر عرض ستون‌ها */
         }
         .results-table th, .results-table td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: center;
             white-space: nowrap;
+            overflow: hidden; /* جلوگیری از سرریز شدن محتوای طولانی */
+            text-overflow: ellipsis; /* نمایش سه نقطه برای محتوای طولانی */
         }
         .results-table thead {
             background-color: #e9ecef;
             color: #333;
             font-weight: bold;
         }
+        
+        /* ✨ تغییر جدید: تعیین عرض ثابت برای ستون کد درس (ستون پنجم) ✨ */
+        .results-table th:nth-child(5),
+        .results-table td:nth-child(5) {
+            width: 200px;
+        }
+
         .results-table tbody tr:nth-child(even) {
             background-color: #f8f9fa;
         }
@@ -114,8 +124,7 @@
     </div>
     <script>
         // ⚠️ مهم: این لینک را با لینکی که از گوگل شیت دریافت کردید، جایگزین کنید
-        const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv';
-        
+        const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv';        
         const searchBtn = document.getElementById('searchBtn');
         const studentIdInput = document.getElementById('studentId');
         const userInfoDiv = document.getElementById('userInfo');
@@ -164,20 +173,17 @@
                 loadingDiv.style.display = 'none';
 
                 if (foundRecords.length > 0) {
-                    // ✨ اصلاح: اضافه شدن ستون "صندلی" به هدر جدول
                     let tableHTML = `<table class="results-table"><thead><tr>
-                        <th>کد دانشجو</th><th>نام</th><th>نام خانوادگی</th><th>درس</th><th>کد درس</th>
-                        <th>تاریخ</th><th>ساعت</th><th>صندلی</th><th>مکان</th><th>نوع</th>
+                        <th>کد دانشجو</th><th>نام</th><th>نام پدر</th><th>درس</th><th>کد درس</th>
+                        <th>تاریخ</th><th>ساعت</th><th>مکان</th><th>صندلی</th><th>نوع</th>
                         </tr></thead><tbody>`;
                     
                     foundRecords.forEach(record => {
-                        // ✨ اصلاح: به‌روزرسانی اندیس‌ها برای نمایش ستون‌های جدید
-                        // ستون‌ها: std[0], name[1], ..., makan[7], sandali[8], noe[9]
                         tableHTML += `<tr>
                             <td>${record[0] || ''}</td><td>${record[1] || ''}</td>
                             <td>${record[2] || ''}</td><td>${record[3] || ''}</td>
                             <td>${record[4] || ''}</td><td>${record[5] || ''}</td>
-                            <td>${record[6] || ''}</td><td>${record[9] || ''}</td>
+                            <td>${record[6] || ''}</td><td>${record[7] || ''}</td>
                             <td>${record[8] || ''}</td><td>${record[9] || ''}</td>
                         </tr>`;
                     });
