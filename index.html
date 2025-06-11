@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>جستجوی اطلاعات دانشجو</title>
+  <style>
+    body { font-family: sans-serif; direction: rtl; text-align: right; padding: 30px; background: #f0f0f0; }
+    input, button { padding: 10px; font-size: 16px; margin: 10px 0; }
+    #result { white-space: pre-wrap; background: #fff; padding: 15px; border: 1px solid #ccc; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>🔍 جستجوی اطلاعات دانشجو</h2>
+  <label>کد دانشجویی:</label><br>
+  <input type="text" id="stdInput" placeholder="مثلاً 123456">
+  <button onclick="search()">جستجو</button>
+  <div id="result">اطلاعات نمایش داده خواهد شد...</div>
+
+  <script>
+    async function search() {
+      const std = document.getElementById("stdInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      resultDiv.textContent = "⏳ در حال جستجو...";
+
+      const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv";
+
+      try {
+        const response = await fetch(csvUrl);
+        const text = await response.text();
+        const rows = text.split("\n").map(r => r.split(","));
+
+        const headers = rows[0];
+        const data = rows.slice(1);
+
+        const found = data.find(row => row[0] === std);
+        if (found) {
+          const output = headers.map((h, i) => `${h}: ${found[i]}`).join("\n");
+          resultDiv.textContent = "✅ اطلاعات پیدا شد:\n\n" + output;
+        } else {
+          resultDiv.textContent = "❌ اطلاعاتی برای این کد یافت نشد.";
+        }
+      } catch (e) {
+        resultDiv.textContent = "⚠️ خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.";
+      }
+    }
+  </script>
+</body>
+</html>
