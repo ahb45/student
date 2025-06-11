@@ -6,103 +6,26 @@
     <title>سامانه اطلاع‌رسانی</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            min-height: 100vh;
-            background-color: #f0f2f5;
-            margin: 20px 0;
-        }
-        .container {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            width: 95%;
-            max-width: 1000px; /* افزایش عرض برای ستون‌های جدید */
-            text-align: center;
-        }
-        h1 {
-            color: #1a237e;
-            margin-bottom: 10px;
-        }
-        p.subtitle {
-            color: #555;
-            margin-bottom: 25px;
-        }
-        .search-box {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            align-items: center;
-        }
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 16px;
-            text-align: center;
-        }
-        button {
-            background-image: linear-gradient(to right, #3949ab, #1a237e);
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        button:hover {
-            box-shadow: 0 4px 15px rgba(50, 63, 153, 0.4);
-            transform: translateY(-2px);
-        }
-        #loading {
-            display: none;
-            margin-top: 20px;
-            color: #555;
-        }
-        #userInfo {
-            margin-top: 25px;
-            text-align: right;
-            overflow-x: auto;
-        }
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-        .results-table th, .results-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            white-space: nowrap;
-        }
-        .results-table thead {
-            background-color: #e9ecef;
-            color: #333;
-            font-weight: bold;
-        }
-        .results-table tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-align: center;
-        }
+        body { font-family: 'Vazirmatn', sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; min-height: 100vh; background-color: #f0f2f5; margin: 20px 0; }
+        .container { background: white; padding: 30px 40px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); width: 95%; max-width: 1000px; text-align: center; }
+        h1 { color: #1a237e; margin-bottom: 10px; }
+        p.subtitle { color: #555; margin-bottom: 25px; }
+        .search-box { display: flex; gap: 10px; margin: 20px 0; align-items: center; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; text-align: center; }
+        button { background-image: linear-gradient(to right, #3949ab, #1a237e); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.3s; }
+        button:hover { box-shadow: 0 4px 15px rgba(50, 63, 153, 0.4); transform: translateY(-2px); }
+        #loading { display: none; margin-top: 20px; color: #555; }
+        #userInfo { margin-top: 25px; text-align: right; overflow-x: auto; }
+        .results-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .results-table th, .results-table td { border: 1px solid #ddd; padding: 10px; text-align: center; white-space: nowrap; }
+        .results-table thead { background-color: #e9ecef; color: #333; font-weight: bold; }
+        .results-table tbody tr:nth-child(even) { background-color: #f8f9fa; }
+        .message { padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; }
         .error { background-color: #ffebee; color: #c62828; }
         .warning { background-color: #fff3e0; color: #ef6c00; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h1>سامانه اطلاع‌رسانی</h1>
         <p class="subtitle">برای مشاهده اطلاعات، کد دانشجویی خود را وارد کنید.</p>
@@ -113,40 +36,27 @@
         <div id="loading">درحال جستجو...</div>
         <div id="userInfo"></div>
     </div>
-
     <script>
-        // ⚠️ مهم: این لینک را با لینکی که از گوگل شیت دریافت کردید، جایگزین کنید
         const googleSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv';
-
         const searchBtn = document.getElementById('searchBtn');
         const studentIdInput = document.getElementById('studentId');
         const userInfoDiv = document.getElementById('userInfo');
         const loadingDiv = document.getElementById('loading');
 
         searchBtn.addEventListener('click', searchStudent);
-        studentIdInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') {
-                searchStudent();
-            }
-        });
+        studentIdInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') searchStudent(); });
 
-        // تابع برای استاندارد کردن فرمت تاریخ (مثال: 1403/2/5 -> 1403/02/05)
         function normalizeDate(dateString) {
             if (!dateString) return '';
             const parts = dateString.split('/');
-            if (parts.length === 3) {
-                return `${parts[0].padStart(4, '0')}/${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}`;
-            }
+            if (parts.length === 3) return `${parts[0].padStart(4, '0')}/${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}`;
             return dateString;
         }
 
-        // ✨ تابع جدید برای استاندارد کردن فرمت ساعت (مثال: 9:30 -> 09:30)
         function normalizeTime(timeString) {
             if (!timeString) return '00:00';
             const parts = timeString.split(':');
-            if (parts.length === 2) {
-                return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
-            }
+            if (parts.length === 2) return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
             return timeString;
         }
 
@@ -156,70 +66,39 @@
                 userInfoDiv.innerHTML = '<p class="message error">لطفاً کد دانشجویی را وارد کنید.</p>';
                 return;
             }
-
             userInfoDiv.innerHTML = '';
             loadingDiv.style.display = 'block';
-
             try {
                 const response = await fetch(googleSheetURL);
                 if (!response.ok) throw new Error('Network response was not ok');
-
                 const data = await response.text();
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
                 const foundRecords = rows.slice(1).filter(row => row.length > 1 && row[0] === studentId);
 
-                // ✨ اصلاح نهایی در منطق مرتب‌سازی
                 foundRecords.sort((a, b) => {
-                    const dateA = normalizeDate(a[5]);
-                    const dateB = normalizeDate(b[5]);
-                    const timeA = normalizeTime(a[6]);
-                    const timeB = normalizeTime(b[6]);
-
+                    const dateA = normalizeDate(a[5]), dateB = normalizeDate(b[5]);
+                    const timeA = normalizeTime(a[6]), timeB = normalizeTime(b[6]);
                     const dateCompare = dateA.localeCompare(dateB);
-                    if (dateCompare !== 0) {
-                        return dateCompare; // مرتب‌سازی بر اساس تاریخ
-                    }
-                    return timeA.localeCompare(timeB); // اگر تاریخ یکسان بود، مرتب‌سازی بر اساس ساعت
+                    if (dateCompare !== 0) return dateCompare;
+                    return timeA.localeCompare(timeB);
                 });
 
                 loadingDiv.style.display = 'none';
 
                 if (foundRecords.length > 0) {
-                    // ✨ تغییر: اضافه شدن ستون‌های مکان و نوع به هدر جدول
-                    let tableHTML = `
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>کد دانشجو</th>
-                                    <th>نام</th>
-                                    <th>نام خانوادگی</th>
-                                    <th>درس</th>
-                                    <th>کد درس</th>
-                                    <th>تاریخ</th>
-                                    <th>ساعت</th>
-                                    <th>مکان</th>
-                                    <th>نوع امتحان</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-                    // ✨ تغییر: اضافه شدن ستون‌های مکان و نوع به سطرهای جدول
-                    // ستون‌ها: std,name,fname,dars,code,tarikh,saat,makan,noe
-                    // اندیس‌ها:  0,  1,   2,   3,   4,    5,    6,    7,    8
+                    let tableHTML = `<table class="results-table"><thead><tr>
+                        <th>کد دانشجو</th><th>نام</th><th>نام پدر</th><th>درس</th><th>کد درس</th>
+                        <th>تاریخ</th><th>ساعت</th><th>مکان</th><th>نوع</th>
+                        </tr></thead><tbody>`;
                     foundRecords.forEach(record => {
-                        tableHTML += `
-                            <tr>
-                                <td>${record[0] || ''}</td>
-                                <td>${record[1] || ''}</td>
-                                <td>${record[2] || ''}</td>
-                                <td>${record[3] || ''}</td>
-                                <td>${record[4] || ''}</td>
-                                <td>${record[5] || ''}</td>
-                                <td>${record[6] || ''}</td>
-                                <td>${record[7] || ''}</td>
-                                <td>${record[8] || ''}</td>
-                            </tr>
-                        `;
+                        // ستون‌ها: std[0], name[1], fname[2], dars[3], code[4], tarikh[5], saat[6], makan[7], noe[8]
+                        tableHTML += `<tr>
+                            <td>${record[0] || ''}</td><td>${record[1] || ''}</td>
+                            <td>${record[2] || ''}</td><td>${record[3] || ''}</td>
+                            <td>${record[4] || ''}</td><td>${record[5] || ''}</td>
+                            <td>${record[6] || ''}</td><td>${record[7] || ''}</td>
+                            <td>${record[8] || ''}</td>
+                        </tr>`;
                     });
                     tableHTML += `</tbody></table>`;
                     userInfoDiv.innerHTML = tableHTML;
@@ -228,11 +107,10 @@
                 }
             } catch (error) {
                 loadingDiv.style.display = 'none';
-                userInfoDiv.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور. لطفاً از صحت لینک و اتصال اینترنت خود مطمئن شوید.</p>';
-                console.error('Error fetching or parsing data:', error);
+                userInfoDiv.innerHTML = '<p class="message error">خطا در برقراری ارتباط با سرور.</p>';
+                console.error('Error:', error);
             }
         }
     </script>
-
 </body>
 </html>
