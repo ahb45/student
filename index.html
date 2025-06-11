@@ -22,7 +22,7 @@
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
             width: 95%;
-            max-width: 900px; 
+            max-width: 900px;
             text-align: center;
         }
         h1 {
@@ -147,23 +147,30 @@
                 }
                 const data = await response.text();
                 
-                // اصلاح کلیدی: پاک کردن فاصله‌های خالی از تمام سلول‌ها برای جلوگیری از خطا
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
                 
-                // فیلتر کردن رکوردها بر اساس کد دانشجویی وارد شده
                 const foundRecords = rows.slice(1).filter(row => row.length > 1 && row[0] === studentId);
+
+                // --- ✨ تغییر جدید: مرتب‌سازی نتایج ✨ ---
+                // رکوردها ابتدا بر اساس تاریخ (ستون اندیس ۵) و سپس ساعت (ستون اندیس ۶) مرتب می‌شوند.
+                foundRecords.sort((a, b) => {
+                    const dateCompare = a[5].localeCompare(b[5]); // ۱. مقایسه تاریخ‌ها
+                    if (dateCompare !== 0) {
+                        return dateCompare; // اگر تاریخ‌ها متفاوت بودند، بر اساس همان مرتب کن
+                    }
+                    return a[6].localeCompare(b[6]); // ۲. اگر تاریخ‌ها یکسان بود، ساعت‌ها را مقایسه کن
+                });
 
                 loadingDiv.style.display = 'none';
 
                 if (foundRecords.length > 0) {
-                    // ایجاد ساختار HTML برای جدول نتایج
                     let tableHTML = `
                         <table class="results-table">
                             <thead>
                                 <tr>
                                     <th>کد دانشجو</th>
                                     <th>نام</th>
-                                    <th>نام پدر</th>
+                                    <th>نام خانوادگی</th>
                                     <th>درس</th>
                                     <th>کد درس</th>
                                     <th>تاریخ</th>
