@@ -59,12 +59,11 @@
       try {
         const response = await fetch(csvUrl);
         const text = await response.text();
-        const rows = text.split("\n").map(r => r.split(","));
+        const rows = text.split(/\r?\n/).map(row => row.split(","));
 
-        const headers = rows[0];
-        const data = rows.slice(1);
+        const headers = rows[0].map(h => h.trim());
+        const data = rows.slice(1).filter(row => row.length === headers.length);
 
-        // نگاشت نام‌های ستون به فارسی
         const labelMap = {
           "std": "کد دانشجویی",
           "name": "نام",
@@ -76,7 +75,7 @@
           "makan": "مکان"
         };
 
-        const matches = data.filter(row => row[0] === std);
+        const matches = data.filter(row => row[0].trim() === std);
 
         if (matches.length > 0) {
           resultDiv.innerHTML = "";
@@ -85,8 +84,8 @@
             card.className = "card";
 
             headers.forEach((header, i) => {
-              const label = labelMap[header] || header;
-              const value = row[i] || "";
+              const label = labelMap[header.trim()] || header.trim();
+              const value = row[i] ? row[i].trim() : "";
               const field = `<div class="field"><span class="label">${label}:</span> ${value}</div>`;
               card.innerHTML += field;
             });
@@ -98,6 +97,7 @@
         }
       } catch (e) {
         resultDiv.innerHTML = "⚠️ خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.";
+        console.error(e);
       }
     }
   </script>
