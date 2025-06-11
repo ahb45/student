@@ -4,9 +4,41 @@
   <meta charset="UTF-8">
   <title>جستجوی اطلاعات دانشجو</title>
   <style>
-    body { font-family: sans-serif; direction: rtl; text-align: right; padding: 30px; background: #f0f0f0; }
-    input, button { padding: 10px; font-size: 16px; margin: 10px 0; }
-    #result { white-space: pre-wrap; background: #fff; padding: 15px; border: 1px solid #ccc; margin-top: 20px; }
+    body {
+      font-family: sans-serif;
+      direction: rtl;
+      text-align: right;
+      padding: 30px;
+      background: #eef2f3;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    #result {
+      margin-top: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .field {
+      margin-bottom: 8px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #444;
+    }
   </style>
 </head>
 <body>
@@ -20,9 +52,9 @@
     async function search() {
       const std = document.getElementById("stdInput").value.trim();
       const resultDiv = document.getElementById("result");
-      resultDiv.textContent = "⏳ در حال جستجو...";
+      resultDiv.innerHTML = "<em>⏳ در حال جستجو...</em>";
 
-      const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQmg8fJsw75mm0sR4Ov3-AUQKIK7DMGzP6Xi1JVXCUC_fsSDye2F1l8weGIxJl7U4OyFUryl4AV1Moi/pub?gid=1541978810&single=true&output=csv";
+      const csvUrl = "https://docs.google.com/spreadsheets/d/1zkq0V8LPNagEk5Z3EkdrXz4uJuVUEijIvQ8xErbqCgE/export?format=csv";
 
       try {
         const response = await fetch(csvUrl);
@@ -32,15 +64,40 @@
         const headers = rows[0];
         const data = rows.slice(1);
 
-        const found = data.find(row => row[0] === std);
-        if (found) {
-          const output = headers.map((h, i) => `${h}: ${found[i]}`).join("\n");
-          resultDiv.textContent = "✅ اطلاعات پیدا شد:\n\n" + output;
+        // نگاشت نام‌های ستون به فارسی
+        const labelMap = {
+          "std": "کد دانشجویی",
+          "name": "نام",
+          "fname": "نام خانوادگی",
+          "dars": "درس",
+          "code": "کد درس",
+          "tarikh": "تاریخ",
+          "saat": "ساعت",
+          "makan": "مکان"
+        };
+
+        const matches = data.filter(row => row[0] === std);
+
+        if (matches.length > 0) {
+          resultDiv.innerHTML = "";
+          matches.forEach(row => {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            headers.forEach((header, i) => {
+              const label = labelMap[header] || header;
+              const value = row[i] || "";
+              const field = `<div class="field"><span class="label">${label}:</span> ${value}</div>`;
+              card.innerHTML += field;
+            });
+
+            resultDiv.appendChild(card);
+          });
         } else {
-          resultDiv.textContent = "❌ اطلاعاتی برای این کد یافت نشد.";
+          resultDiv.innerHTML = "❌ اطلاعاتی برای این کد یافت نشد.";
         }
       } catch (e) {
-        resultDiv.textContent = "⚠️ خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.";
+        resultDiv.innerHTML = "⚠️ خطا در دریافت اطلاعات. لطفاً دوباره تلاش کنید.";
       }
     }
   </script>
