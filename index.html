@@ -93,6 +93,10 @@
         }
         
         /* ✨ تغییر جدید: تعیین عرض ثابت برای ستون کد درس (ستون پنجم) ✨ */
+         .results-table th:nth-child(1),
+        .results-table td:nth-child(1) {
+            width: 70px;
+        }
         .results-table th:nth-child(5),
         .results-table td:nth-child(5) {
             width: 200px;
@@ -175,7 +179,7 @@
                 if (foundRecords.length > 0) {
                     let tableHTML = `<table class="results-table"><thead><tr>
                         <th>کد دانشجو</th><th>نام</th><th>نام پدر</th><th>درس</th><th>کد درس</th>
-                        <th>تاریخ</th><th>ساعت</th><th>مکان</th><th>صندلی</th><th>نوع</th>
+                        <th>تاریخ</th><th>ساعت</th><th>شماره صندلی</th><th>نوع امتحان</th><th>مکان</th>
                         </tr></thead><tbody>`;
                     
                     foundRecords.forEach(record => {
